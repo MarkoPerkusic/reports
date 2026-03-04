@@ -1,9 +1,41 @@
-name: Deploy Virtualna Burza
+# name: Deploy Virtualna Burza
+
+# on:
+#   schedule:
+#     - cron: "0 6 * * 1-5"
+#   workflow_dispatch:
+
+# jobs:
+#   build:
+#     runs-on: ubuntu-latest
+
+#     steps:
+#       - uses: actions/checkout@v4
+
+#       - uses: actions/setup-python@v5
+#         with:
+#           python-version: "3.12"
+
+#       - run: pip install -r requirements.txt
+#       - run: python main.py
+
+#       - uses: peaceiris/actions-gh-pages@v3
+#         with:
+#           github_token: ${{ secrets.GITHUB_TOKEN }}
+#           publish_dir: ./output
+
+name: Run Report
 
 on:
   schedule:
-    - cron: "0 6 * * 1-5"
+    - cron: "0 6 * * *"
+    - cron: "0 18 * * *"
   workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
 
 jobs:
   build:
@@ -14,12 +46,23 @@ jobs:
 
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          python-version: "3.11"
 
-      - run: pip install -r requirements.txt
-      - run: python main.py
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
 
-      - uses: peaceiris/actions-gh-pages@v3
+      - name: Run script
+        run: |
+          python main.py
+
+      - name: Upload site
+        uses: actions/upload-pages-artifact@v3
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./output
+          path: output
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/deploy-pages@v4
