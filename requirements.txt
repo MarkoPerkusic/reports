@@ -1,4 +1,6 @@
 pandas
 numpy
-requests
+matplotlib
 statsmodels
+requests
+plotly
