@@ -84,11 +84,8 @@ def zse_api_to_internal_df(df_raw):
 
     df = df.rename(columns=rename_map)
 
-    if "date" not in df.columns:
-        raise ValueError("date column missing")
-
-    if "close" not in df.columns:
-        raise ValueError("close column missing")
+    if "date" not in df.columns or "close" not in df.columns:
+        return None
 
     df["date"] = pd.to_datetime(df["date"], errors="coerce")
     df["close"] = pd.to_numeric(df["close"], errors="coerce")
@@ -396,6 +393,10 @@ if __name__ == "__main__":
                     df_raw = clean_df(df_raw)
 
                     df = zse_api_to_internal_df(df_raw)
+
+                    if df is None:
+                        print("Skipping", ticker, "- missing columns")
+                        continue
 
                     df = add_features(df)
 
