@@ -53,29 +53,22 @@ def zse_api_to_internal_df(df_raw):
 
     df = df_raw.copy()
 
-    rename_map = {
+    df = df.rename(columns={
         "Datum": "date",
         "Zadnja": "close",
-        "Zadnja cijena": "close",
-        "Last": "close",
         "Prva": "open",
         "Najviša": "high",
         "Najniža": "low",
         "Promet": "turnover",
-    }
-
-    df = df.rename(columns=rename_map)
-
-    if "date" not in df.columns:
-        raise ValueError("date column missing")
-
-    if "close" not in df.columns:
-        raise ValueError("close column missing")
+    })
 
     df["date"] = pd.to_datetime(df["date"], errors="coerce")
-    df["close"] = pd.to_numeric(df["close"], errors="coerce")
 
-    df = df.dropna(subset=["date", "close"])
+    for col in ["open","high","low","close","turnover"]:
+        if col in df.columns:
+            df[col] = pd.to_numeric(df[col], errors="coerce")
+
+    df = df.dropna(subset=["date","close"])
 
     return df.sort_values("date").reset_index(drop=True)
 
