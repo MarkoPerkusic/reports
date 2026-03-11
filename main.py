@@ -50,26 +50,32 @@ def clean_df(df):
 
 
 def zse_api_to_internal_df(df_raw):
-
     df = df_raw.copy()
 
-    df = df.rename(columns={
-        "Datum": "date",
-        "Zadnja": "close",
-        "Prva": "open",
-        "Najviša": "high",
-        "Najniža": "low",
-        "Promet": "turnover",
-    })
+    if "Datum" in df.columns:
+        df = df.rename(columns={
+            "Datum": "date",
+            "Zadnja": "close",
+            "Prva": "open",
+            "Najviša": "high",
+            "Najniža": "low",
+            "Promet": "turnover",
+        })
+    elif "date" in df.columns:
+        df = df.rename(columns={
+            "last_price": "close",
+            "open_price": "open",
+            "high_price": "high",
+            "low_price": "low",
+        })
 
     df["date"] = pd.to_datetime(df["date"], errors="coerce")
 
-    for col in ["open","high","low","close","turnover"]:
+    for col in ["open", "high", "low", "close", "turnover"]:
         if col in df.columns:
             df[col] = pd.to_numeric(df[col], errors="coerce")
 
-    df = df.dropna(subset=["date","close"])
-
+    df = df.dropna(subset=["date", "close"])
     return df.sort_values("date").reset_index(drop=True)
 
 
