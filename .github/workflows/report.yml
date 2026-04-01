@@ -1,68 +1,78 @@
-# name: Deploy Virtualna Burza
-
-# on:
-#   schedule:
-#     - cron: "0 6 * * 1-5"
-#   workflow_dispatch:
-
-# jobs:
-#   build:
-#     runs-on: ubuntu-latest
-
-#     steps:
-#       - uses: actions/checkout@v4
-
-#       - uses: actions/setup-python@v5
-#         with:
-#           python-version: "3.12"
-
-#       - run: pip install -r requirements.txt
-#       - run: python main.py
-
-#       - uses: peaceiris/actions-gh-pages@v3
-#         with:
-#           github_token: ${{ secrets.GITHUB_TOKEN }}
-#           publish_dir: ./output
-
-name: Run Report
+name: Run Report v2
 
 on:
-  schedule:
-    - cron: "0 6 * * *"
-    - cron: "0 18 * * *"
   workflow_dispatch:
+  schedule:
+    - cron: "0 6 * * *"   # runs daily at 06:00 UTC
+    - cron: "0 18 * * *"  # runs daily at 18:00 UTC
+  push:
+    branches: [new_reports_v1]
 
 permissions:
   contents: read
   pages: write
   id-token: write
 
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v5
+      - name: Setup Python
+        uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
       - name: Install dependencies
         run: |
+          python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Run script
-        run: |
-          python main.py
+      # If you use API keys later
+      # - name: Set environment variables
+      #   run: echo "API_KEY=${{ secrets.API_KEY }}" >> $GITHUB_ENV
 
-      - name: Upload site
+      - name: Run pipeline
+        run: python -m src.main
+
+      - name: Verify site output
+        run: |
+          echo "Listing site directory:"
+          ls -R site || echo "site/ not found"
+
+      # Optional: keep outputs for debugging
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: trading-report
+          path: site/
+
+      # Required for GitHub Pages
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: output
+          path: ./site
 
   deploy:
     needs: build
+    runs-on: ubuntu-latest
+
+    environment:
+      name: github-pages
+
+    steps:
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v4
     runs-on: ubuntu-latest
     steps:
       - uses: actions/deploy-pages@v4
