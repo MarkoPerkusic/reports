@@ -2,3 +2,4 @@ duckdb
 pandas
 numpy
 matplotlib
+requests

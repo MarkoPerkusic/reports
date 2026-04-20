@@ -6,23 +6,40 @@ from src.report import build_report
 from src.storage import get_connection, save_prices
 from src.strategy import run_strategy
 from src.validate import validate_prices
+import sys
+
+
+sys.stdout.reconfigure(encoding='utf-8')
 
 
 def main() -> None:
-    df = load_data()
-    df = validate_prices(df)
+    all_data = load_data()
+
+    if not all_data:
+        print("Nema podataka — pipeline prekinut.")
+        return
 
     conn = get_connection(DB_PATH)
-    save_prices(conn, df)
+    all_results = {}
 
-    features = build_features(df)
-    strategy_df = run_strategy(features)
-    metrics = calculate_all_metrics(strategy_df)
+    for ticker, df_raw in all_data.items():
+        print(f"\n[pipeline] Obrada: {ticker}")
+        try:
+            df = validate_prices(df_raw)
+            save_prices(conn, df, ticker)
+            features = build_features(df)
+            strategy_df = run_strategy(features)
+            metrics = calculate_all_metrics(strategy_df)
+            all_results[ticker] = (strategy_df, metrics)
+            print(f"[pipeline] {ticker} — go_live: {metrics['go_live']}")
+        except Exception as e:
+            print(f"[pipeline] {ticker} — greška: {e}")
 
-    build_report(strategy_df, metrics)
-
-    print("Pipeline completed successfully.")
-    print(metrics)
+    if all_results:
+        build_report(all_results)
+        print("\nPipeline completed successfully.")
+    else:
+        print("\nNijedan ticker nije uspješno obrađen.")
 
 
 if __name__ == "__main__":
