@@ -1,15 +1,13 @@
-from src.config import DB_PATH
 from src.features import build_features
 from src.ingest import load_data
 from src.metrics import calculate_all_metrics
 from src.report import build_report
-from src.storage import get_connection, save_prices
 from src.strategy import run_strategy
 from src.validate import validate_prices
 import sys
 
 
-sys.stdout.reconfigure(encoding='utf-8')
+sys.stdout.reconfigure(encoding="utf-8")
 
 
 def main() -> None:
@@ -19,14 +17,12 @@ def main() -> None:
         print("Nema podataka — pipeline prekinut.")
         return
 
-    conn = get_connection(DB_PATH)
     all_results = {}
 
     for ticker, df_raw in all_data.items():
         print(f"\n[pipeline] Obrada: {ticker}")
         try:
             df = validate_prices(df_raw)
-            save_prices(conn, df, ticker)
             features = build_features(df)
             strategy_df = run_strategy(features)
             metrics = calculate_all_metrics(strategy_df)

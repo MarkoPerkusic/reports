@@ -1,13 +1,30 @@
 from pathlib import Path
+import os
 
 SITE_DIR = Path("site")
 CHARTS_DIR = SITE_DIR / "charts"
 
-DB_PATH = ":memory:"
+USE_DUMMY_DATA = False
 
-SYMBOL = "AAPL"
-LOOKBACK_YEARS = 3
-INTERVAL = "1d"
+PAW_BASE_URL = os.getenv(
+    "PAW_BASE_URL",
+    "https://MarPer.pythonanywhere.com"
+)
+
+STOCKS = {
+    "ERNT": {
+        "isin": "HRERNTRA0000",
+        "page_url": "https://zse.hr/hr/papir/310?isin=HRERNTRA0000",
+    },
+    "HT": {
+        "isin": "HRHT00RA0005",
+        "page_url": "https://zse.hr/hr/papir/310?isin=HRHT00RA0005",
+    },
+    "PODR": {
+        "isin": "HRPODRRA0004",
+        "page_url": "https://zse.hr/hr/papir/310?isin=HRPODRRA0004",
+    },
+}
 
 RISK_FREE_ANNUAL = 0.04
 TRADING_DAYS = 252
